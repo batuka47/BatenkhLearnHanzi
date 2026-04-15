@@ -10,6 +10,7 @@ import { words } from "@/lib/words-data"
 import { useAuth } from "@/contexts/auth-context"
 import { useProgress } from "@/hooks/use-progress"
 import { LogOut, User, CheckCircle2, Circle, FlaskConical, BookOpenCheck, X, UserCircle } from "lucide-react"
+import Footer from "@/components/footer"
 
 type Filter = "all" | "learned" | "unlearned"
 
@@ -385,6 +386,8 @@ export default function Home() {
           onClose={() => setLearnedTestWords(null)}
         />
       )}
+
+      <Footer />
     </div>
   )
 }
