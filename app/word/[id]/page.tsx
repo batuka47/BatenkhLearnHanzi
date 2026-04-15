@@ -32,17 +32,24 @@ export default function WordPage() {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      {/* Header with Back Button */}
-      <header className="flex-shrink-0 flex items-center justify-between p-3 sm:p-4 border-b border-border bg-background">
-        <div className="flex items-center gap-2">
+      <header className="flex-shrink-0 flex items-center justify-between p-3 sm:p-4 border-b border-border bg-background gap-3">
+        <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 px-3 py-2 rounded-md bg-secondary border border-border text-foreground hover:bg-border transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-md bg-secondary border border-border text-foreground hover:bg-border transition-colors flex-shrink-0"
           >
             <ChevronLeft size={18} />
             <span className="text-sm font-medium">Back</span>
           </button>
-          <h1 className="text-lg sm:text-xl font-semibold text-foreground ml-2">{word.hanzi}</h1>
+          <div className="ml-1 min-w-0">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground leading-tight">{word.hanzi}</h1>
+              <span className="text-sm text-accent font-medium">{word.pinyin}</span>
+            </div>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
+              {word.meaningEn} · {word.meaningMn}
+            </p>
+          </div>
         </div>
         <ThemeToggle />
       </header>
