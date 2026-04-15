@@ -59,6 +59,7 @@ function CharQuiz({
   const [mistakeCount, setMistakeCount] = useState(0)
   const [done, setDone] = useState(false)
   const [hinting, setHinting] = useState(false)
+  const [usedHint, setUsedHint] = useState(false)
 
   useEffect(() => {
     const el = elRef.current
@@ -85,25 +86,27 @@ function CharQuiz({
     }
   }, [char, size])
 
-  // Flash the character for 1.5s then hide again
+  // Show the character, then after 1.5s reveal permanently and mark as hinted (failed)
   const handleHint = () => {
     const writer = writerRef.current
     if (!writer || hinting || done) return
     setHinting(true)
     writer.showCharacter()
     setTimeout(() => {
-      writer.hideCharacter()
+      setDone(true)
+      setUsedHint(true)
       setHinting(false)
+      onComplete(false)  // hint = mistake, counts as failed
     }, 1500)
   }
 
   return (
     <div className="flex flex-col items-center">
-      <div ref={elRef} className="rounded-xl border-2 border-border bg-slate-900/50 shadow-inner"
+      <div ref={elRef} className="rounded-xl border-2 border-border bg-slate-900/50 shadow-inner mx-auto"
         style={{ width: size, height: size }} />
       <div className="flex items-center gap-3 mt-2">
-        <p className={`text-xs font-medium ${done ? "text-green-500" : mistakeCount > 0 ? "text-orange-400" : "text-muted-foreground"}`}>
-          {done ? "✓ Done" : mistakeCount > 0 ? `${mistakeCount} mistake${mistakeCount !== 1 ? "s" : ""}` : "Draw it"}
+        <p className={`text-xs font-medium ${done && usedHint ? "text-orange-400" : done ? "text-green-500" : mistakeCount > 0 ? "text-orange-400" : "text-muted-foreground"}`}>
+          {done && usedHint ? "Hint used" : done ? "✓ Done" : mistakeCount > 0 ? `${mistakeCount} mistake${mistakeCount !== 1 ? "s" : ""}` : "Draw it"}
         </p>
         {!done && (
           <button
@@ -143,15 +146,28 @@ export default function DayTest({ words, dayNumber, onClose }: DayTestProps) {
   const [saved, setSaved] = useState(false)
   const [canvasSize, setCanvasSize] = useState(160)
 
+  // charCount is derived from questions so it's always available
+  const currentCharCount = questions[currentIndex]?.word.hanzi.split("").length ?? 1
+
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth
-      setCanvasSize(w < 480 ? 120 : w < 768 ? 150 : 180)
+      const n = currentCharCount
+      if (w < 640) {
+        // Mobile: vertical stack — 80% of screen width
+        setCanvasSize(Math.floor(w * 0.8))
+      } else if (w < 1024) {
+        // Tablet: horizontal row split by char count
+        setCanvasSize(Math.min(Math.floor((w - 80) / n - 16), 280))
+      } else {
+        // Desktop: horizontal row, larger
+        setCanvasSize(Math.min(Math.floor((w - 120) / n - 24), 360))
+      }
     }
     update()
     window.addEventListener("resize", update)
     return () => window.removeEventListener("resize", update)
-  }, [])
+  }, [currentCharCount])
 
   const current = questions[currentIndex]
   const characters = current?.word.hanzi.split("") ?? []
@@ -374,9 +390,10 @@ export default function DayTest({ words, dayNumber, onClose }: DayTestProps) {
           <p className="text-sm text-muted-foreground mt-1">Draw each character below</p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+        {/* Mobile: vertical stack, tablet+: horizontal row */}
+        <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 w-full px-2">
           {activeChars.map((char, i) => (
-            <div key={`${activeQuestion.word.id}-${i}`} className="flex flex-col items-center gap-2">
+            <div key={`${activeQuestion.word.id}-${i}`} className="flex flex-col items-center gap-2 w-full sm:flex-1 sm:min-w-0">
               <p className="text-xs text-muted-foreground font-medium">Character {i + 1}</p>
               <CharQuiz char={char} size={canvasSize} onComplete={(s) => handleCharComplete(i, s)} />
             </div>
